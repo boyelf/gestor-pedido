@@ -22,6 +22,7 @@ import toast from 'react-hot-toast'
 import { getTasks } from '@/actions/task/get-task'
 import { deleteTask } from '@/actions/task/delete-task'
 import Image from 'next/image'
+import TarjetaPedido from '@/components/TarjetaPedido'
 
 interface TaskListState {
   tasks: Task[]
@@ -319,83 +320,7 @@ export function TaskList() {
         ) : (
           <>
             {state.tasks.map((task) => (
-              <Card key={task.id} className="hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full">
-                <CardContent className="p-4 flex flex-col h-full">
-                  {/* Image */}
-                  {task.image && (
-                    <div className="flex-shrink-0 mb-3 -m-4 mb-2">
-                      <Image
-                        src={task.image}
-                        alt={task.title}
-                        width={300}
-                        height={200}
-                        className="w-full h-32 object-cover"
-                      />
-                    </div>
-                  )}
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold truncate">{task.title}</h3>
-                    {task.description && (
-                      <p className="text-gray-600 text-xs mt-1 line-clamp-2">
-                        {task.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Badges */}
-                  <div className="flex gap-1 mt-3 flex-wrap">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(
-                        task.status
-                      )}`}
-                    >
-                      {getStatusLabel(task.status)}
-                    </span>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(
-                        task.priority
-                      )}`}
-                    >
-                      {getPriorityLabel(task.priority)}
-                    </span>
-                  </div>
-
-                  {/* Date and Actions */}
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
-                    <span className="text-xs text-gray-500 flex-1">
-                      {new Date(task.created_at).toLocaleDateString('es-ES')}
-                    </span>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-2"
-                        // onClick={() => handleEditTask(task)}
-                      >
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-2"
-                        onClick={() => handleEditTask(task)}
-                      >
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-2"
-                        onClick={() => handleDelete(task.id)}
-                      >
-                        <Trash2 className="h-3 w-3 text-red-500" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+             <TarjetaPedido key={task.id} />
             ))}
 
             {/* Infinite scroll trigger */}

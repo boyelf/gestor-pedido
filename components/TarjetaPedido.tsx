@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { BookOpen, Check, Settings } from 'lucide-react'
+import { BookOpen, Check, Settings, User2 } from 'lucide-react'
 
 const TarjetaPedido: React.FC = () => {
   return (
@@ -10,7 +10,7 @@ const TarjetaPedido: React.FC = () => {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDLzvcZ9GxkbR7-kXqbrWjAPazddNXJ29fH-sKpuWuZcV43C6qnHXkmvyZlIMjXCwnp6krH1pEvsaN7Pkal7McbyW-UlTz1VD5hGrqZx7HNu4LCNqUJLSJ57TOGJ2vYRSu7yuWuuvGV9Pp9cBUT_3pTGKaeEDSdmPke0GJ6fFLENMXUFcgxzV-pjlheI5ievXXePiz9ApQKocp1azRcQxK3TF-7hG-sT8qT5NPaSU2J9VJGKjMlxABdl3zkPYDFwpdvozsbYjrGmEBv')"
+            backgroundImage: "url('/food-delivery-symbol-logo.png')"
           }}
         />
         <div className="absolute top-4 right-4">
@@ -27,7 +27,7 @@ const TarjetaPedido: React.FC = () => {
           <div>
             <h2 className="text-slate-900 dark:text-slate-100 text-xl font-bold tracking-tight">Pedido #82934</h2>
             <div className="flex items-center gap-2 mt-1 text-slate-500 dark:text-slate-400">
-              <span className="material-symbols-outlined text-lg">person</span>
+              <span className="material-symbols-outlined text-lg"><User2 /></span>
               <p className="text-sm font-medium">Mensajero: Carlos Rodríguez</p>
             </div>
           </div>
