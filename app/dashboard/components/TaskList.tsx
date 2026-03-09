@@ -286,13 +286,13 @@ export function TaskList() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Tareas</h1>
+          <h1 className="text-3xl font-bold">Pedidos</h1>
           <p className="text-gray-500 mt-1">
-            Total de tareas: <span className="font-semibold">{state.totalCount}</span>
+            Total de pedidos: <span className="font-semibold">{state.totalCount}</span>
           </p>
         </div>
         <Button onClick={() => setIsFormOpen(true)} size="lg">
-          + Nueva Tarea
+          + Nuevo Pedido
         </Button>
       </div>
 

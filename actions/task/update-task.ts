@@ -11,6 +11,7 @@ interface UpdateTaskData {
   priority?: 'low' | 'medium' | 'high'
   image?: File | null
   existingImage?: string | null
+  updated_at?: string | number
   removeImage?: boolean
 }
 

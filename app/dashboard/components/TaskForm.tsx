@@ -106,6 +106,7 @@ export function TaskForm({ isOpen, onClose, task, onSuccess }: TaskFormProps) {
                     priority: data.priority,
                     image: selectedFile || undefined,
                     existingImage: task.image,
+                    updated_at: Date.now().toString(),
                     removeImage,
                 });
 
@@ -122,6 +123,7 @@ export function TaskForm({ isOpen, onClose, task, onSuccess }: TaskFormProps) {
                     description: data.description,
                     status: data.status,
                     priority: data.priority,
+                    created_at: Date.now().toString(),
                     image: selectedFile || undefined,
                 });
 

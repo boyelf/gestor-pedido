@@ -8,6 +8,7 @@ interface CreateTaskData {
   description?: string
   status?: Status
   priority?: 'low' | 'medium' | 'high'
+  created_at?: string | number
   image?: File | null
 }
 

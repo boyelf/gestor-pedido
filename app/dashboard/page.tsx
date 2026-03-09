@@ -17,7 +17,7 @@ return (
     <nav className="px-6 py-4 flex justify-between border-b">
         <div className="text-xl font-extrabold tracking-tight flex items-center gap-3" >
             <LayoutGrid size={32}/>
-           Gestor de tareas
+           Gestor Pedidos
         </div>
         {user && (
         
