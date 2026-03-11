@@ -42,27 +42,39 @@ const CrearPedidoPage: React.FC = () => {
         <CardContent className="p-6">
           <h2 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">Agregar Producto</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Input
-              placeholder="Descripción"
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              className="md:col-span-2"
-            />
-            <Input
-              type="number"
-              placeholder="Cantidad"
-              value={cantidad}
-              onChange={(e) => setCantidad(Number(e.target.value))}
-              min="1"
-            />
-            <Input
-              type="number"
-              placeholder="Precio"
-              value={precio}
-              onChange={(e) => setPrecio(Number(e.target.value))}
-              min="0"
-              step="0.01"
-            />
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Descripcion</label>
+              <Input
+                placeholder="Descripcion del producto"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Cantidad (unidades)
+              </label>
+              <Input
+                type="number"
+                placeholder="Ej: 2"
+                value={cantidad}
+                onChange={(e) => setCantidad(Number(e.target.value))}
+                min="1"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Precio (por unidad)
+              </label>
+              <Input
+                type="number"
+                placeholder="Ej: 10.50"
+                value={precio}
+                onChange={(e) => setPrecio(Number(e.target.value))}
+                min="0"
+                step="0.01"
+              />
+            </div>
           </div>
           <Button onClick={addProduct} className="mt-4 flex items-center gap-2">
             <Plus size={16} />
@@ -74,15 +86,17 @@ const CrearPedidoPage: React.FC = () => {
       {/* Product List */}
       <div className="space-y-4 mb-6">
         <div>
-            <label className="text-md font-medium text-slate-700 dark:text-slate-300">Cantidad de articulos: {products.length}</label>
-        </div>        
+          <label className="text-md font-medium text-slate-700 dark:text-slate-300">
+            Cantidad de articulos: {products.length}
+          </label>
+        </div>
         {products.map((product, index) => (
           <Card key={index}>
             <CardContent className="p-6">
               <div className="flex justify-between items-center">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
                   <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Descripción</label>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Descripcion</label>
                     <p className="text-slate-900 dark:text-slate-100">{product.descripcion}</p>
                   </div>
                   <div>
