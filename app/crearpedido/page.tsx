@@ -10,26 +10,28 @@ import { AvatarBadge } from '@/components/ui/AvatarBadge';
 import { useAuth } from '@/context/AuthContext';
 import { getImageUrlWithTimestamp } from '@/lib/utils';
 
-interface Product {
+interface Articulo {
   descripcion: string;
   cantidad: number;
   precio: number;
 }
 
 const CrearPedidoPage: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>(() => {
+  const [articulos, setArticulos] = useState<Articulo[]>(() => {
     if (typeof window === 'undefined') {
       return [];
     }
 
-    const storedProducts = sessionStorage.getItem('pedidoProducts');
-    if (!storedProducts) {
+    const storedArticulos =
+      sessionStorage.getItem('pedidoArticulos') ?? sessionStorage.getItem('pedidoProducts');
+    if (!storedArticulos) {
       return [];
     }
 
     try {
-      return JSON.parse(storedProducts) as Product[];
+      return JSON.parse(storedArticulos) as Articulo[];
     } catch {
+      sessionStorage.removeItem('pedidoArticulos');
       sessionStorage.removeItem('pedidoProducts');
       return [];
     }
@@ -39,23 +41,23 @@ const CrearPedidoPage: React.FC = () => {
   const [precio, setPrecio] = useState<number>(1);
 
   useEffect(() => {
-    sessionStorage.setItem('pedidoProducts', JSON.stringify(products));
-  }, [products]);
+    sessionStorage.setItem('pedidoArticulos', JSON.stringify(articulos));
+  }, [articulos]);
 
-  const addProduct = () => {
+  const addArticulo = () => {
     if (descripcion.trim() && cantidad > 0 && precio >= 0) {
-      setProducts([...products, { descripcion, cantidad, precio }]);
+      setArticulos([...articulos, { descripcion, cantidad, precio }]);
       setDescripcion('');
       setCantidad(1);
       setPrecio(1);
     }
   };
 
-  const deleteProduct = (index: number) => {
-    setProducts(products.filter((_, i) => i !== index));
+  const deleteArticulo = (index: number) => {
+    setArticulos(articulos.filter((_, i) => i !== index));
   };
 
-  const total = products.reduce((sum, product) => sum + product.cantidad * product.precio, 0);
+  const total = articulos.reduce((sum, articulo) => sum + articulo.cantidad * articulo.precio, 0);
 
 const { user } = useAuth();
 
@@ -104,7 +106,7 @@ const { user } = useAuth();
                 onChange={(e) => setCantidad(Number(e.target.value))}
                 inputMode="numeric"
                 pattern="[0-9]*"
-                maxLength="3"
+                maxLength={3}
               />
             </div>
             <div className="space-y-2">
@@ -118,11 +120,11 @@ const { user } = useAuth();
                 onChange={(e) => setPrecio(Number(e.target.value))}
                 inputMode="numeric"
                 pattern="[0-9]*"
-                maxLength="4"
+                maxLength={4}
               />
             </div>
           </div>
-          <Button onClick={addProduct} className="mt-4 flex items-center gap-2">
+          <Button onClick={addArticulo} className="mt-4 flex items-center gap-2">
             <Plus size={16} />
             Agregar Producto
           </Button>
@@ -133,31 +135,31 @@ const { user } = useAuth();
       <div className="space-y-4 mb-6">
         <div>
           <label className="text-md font-medium text-slate-700 dark:text-slate-300">
-            Cantidad de articulos: {products.length}
+            Cantidad de articulos: {articulos.length}
           </label>
         </div>
-        {products.map((product, index) => (
+        {articulos.map((articulo, index) => (
           <Card key={index}>
             <CardContent className="p-6">
               <div className="flex justify-between items-center">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
                   <div>
                     <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Descripcion</label>
-                    <p className="text-slate-900 dark:text-slate-100">{product.descripcion}</p>
+                    <p className="text-slate-900 dark:text-slate-100">{articulo.descripcion}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cantidad</label>
-                    <p className="text-slate-900 dark:text-slate-100">{product.cantidad}</p>
+                    <p className="text-slate-900 dark:text-slate-100">{articulo.cantidad}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Precio</label>
-                    <p className="text-slate-900 dark:text-slate-100">${product.precio.toFixed(2)}</p>
+                    <p className="text-slate-900 dark:text-slate-100">${articulo.precio.toFixed(2)}</p>
                   </div>
                 </div>
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => deleteProduct(index)}
+                  onClick={() => deleteArticulo(index)}
                   className="ml-4"
                 >
                   <Trash2 size={16} />
@@ -177,10 +179,10 @@ const { user } = useAuth();
           </div>
           {/* <div className="flex justify-between items-center">
             <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">Cant. articulos:</span>
-            <span className="text-2xl font-bold text-primary">{products.length}</span>
+            <span className="text-2xl font-bold text-primary">{articulos.length}</span>
           </div> */}
           <div className="mt-6 hidden md:flex md:justify-end">
-            {products.length === 0 ? (
+            {articulos.length === 0 ? (
               <Button type="button" disabled>
                 Continuar a datos del cliente
               </Button>
@@ -195,7 +197,7 @@ const { user } = useAuth();
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-4 backdrop-blur md:hidden">
         <div className="mx-auto max-w-4xl">
-          {products.length === 0 ? (
+          {articulos.length === 0 ? (
             <Button type="button" disabled className="w-full">
               Continuar a datos del cliente
             </Button>

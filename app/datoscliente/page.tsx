@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -25,43 +26,86 @@ import { getImageUrlWithTimestamp } from '@/lib/utils';
 import { LayoutGrid } from 'lucide-react';
 import { AvatarBadge } from '@/components/ui/AvatarBadge';
 import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
+import { createPedido } from '@/actions/pedido/create-pedido';
+import { getRepartidores, RepartidorOption } from '@/actions/repartidor/get-repartidores';
 
-interface Product {
+interface Articulo {
   descripcion: string;
   cantidad: number;
   precio: number;
 }
 
-const mensajeros = ['Carlos', 'Mariana', 'Diego', 'Ana'];
-
 const DatosClientePage: React.FC = () => {
   const [descripcion, setDescripcion] = useState('');
   const [direccion, setDireccion] = useState('');
-  const [mensajero, setMensajero] = useState('');
+  const [repartidorId, setRepartidorId] = useState('');
+  const [repartidores, setRepartidores] = useState<RepartidorOption[]>([]);
+  const [loadingRepartidores, setLoadingRepartidores] = useState(true);
+  const [savingPedido, setSavingPedido] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [products] = useState<Product[]>(() => {
+  const [articulos] = useState<Articulo[]>(() => {
     if (typeof window === 'undefined') {
       return [];
     }
 
-    const storedProducts = sessionStorage.getItem('pedidoProducts');
-    if (!storedProducts) {
+    const storedArticulos =
+      sessionStorage.getItem('pedidoArticulos') ?? sessionStorage.getItem('pedidoProducts');
+    if (!storedArticulos) {
       return [];
     }
 
     try {
-      return JSON.parse(storedProducts) as Product[];
+      return JSON.parse(storedArticulos) as Articulo[];
     } catch {
       return [];
     }
   });
+  const router = useRouter();
 
   const total = useMemo(
-    () => products.reduce((sum, product) => sum + product.cantidad * product.precio, 0),
-    [products]
+    () => articulos.reduce((sum, articulo) => sum + articulo.cantidad * articulo.precio, 0),
+    [articulos]
   );
+
+  const repartidorSeleccionado = useMemo(
+    () => repartidores.find((repartidor) => repartidor.id === repartidorId),
+    [repartidorId, repartidores]
+  );
+
   const hasAllFormData =
-    descripcion.trim().length > 0 && direccion.trim().length > 0 && mensajero.trim().length > 0;
+    descripcion.trim().length > 0 &&
+    direccion.trim().length > 0 &&
+    repartidorId.trim().length > 0 &&
+    articulos.length > 0;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchRepartidores = async () => {
+      setLoadingRepartidores(true);
+      const { repartidores: repartidoresData, error } = await getRepartidores();
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (error) {
+        toast.error(error);
+        setRepartidores([]);
+      } else {
+        setRepartidores(repartidoresData);
+      }
+
+      setLoadingRepartidores(false);
+    };
+
+    fetchRepartidores();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -71,7 +115,43 @@ const DatosClientePage: React.FC = () => {
     setIsModalOpen(false);
   };
 
-const { user } = useAuth();
+  const handleSavePedido = async () => {
+    if (!hasAllFormData || savingPedido) {
+      return;
+    }
+
+    setSavingPedido(true);
+
+    try {
+      const { pedido, error } = await createPedido({
+        descripcion: descripcion.trim(),
+        direccion: direccion.trim(),
+        repartidorId,
+        articulos: articulos.map((articulo) => ({
+          descripcion: articulo.descripcion.trim(),
+          cantidad: Number(articulo.cantidad),
+          precio: Number(articulo.precio),
+        })),
+      });
+
+      if (error) {
+        toast.error(error);
+        return;
+      }
+
+      sessionStorage.removeItem('pedidoArticulos');
+      sessionStorage.removeItem('pedidoProducts');
+      toast.success(`Pedido #${pedido?.id_pedido ?? ''} creado exitosamente`);
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Error creating pedido:', error);
+      toast.error('Error al crear el pedido');
+    } finally {
+      setSavingPedido(false);
+    }
+  };
+
+  const { user } = useAuth();
 
   return (
     
@@ -106,7 +186,7 @@ const { user } = useAuth();
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Formulario del cliente</DialogTitle>
-                <DialogDescription>Completa descripcion, direccion y mensajero.</DialogDescription>
+                <DialogDescription>Completa descripcion, direccion y repartidor.</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
@@ -135,16 +215,22 @@ const { user } = useAuth();
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Mensajero
+                    Repartidor
                   </label>
-                  <Select value={mensajero} onValueChange={setMensajero}>
+                  <Select value={repartidorId} onValueChange={setRepartidorId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un mensajero" />
+                      <SelectValue
+                        placeholder={
+                          loadingRepartidores
+                            ? 'Cargando repartidores...'
+                            : 'Selecciona un repartidor'
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {mensajeros.map((name) => (
-                        <SelectItem key={name} value={name}>
-                          {name}
+                      {repartidores.map((repartidor) => (
+                        <SelectItem key={repartidor.id} value={repartidor.id}>
+                          {[repartidor.nombre, repartidor.apellido].filter(Boolean).join(' ')}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -181,9 +267,13 @@ const { user } = useAuth();
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Mensajero</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Repartidor</p>
               <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                {mensajero || 'Sin mensajero'}
+                {repartidorSeleccionado
+                  ? [repartidorSeleccionado.nombre, repartidorSeleccionado.apellido]
+                      .filter(Boolean)
+                      .join(' ')
+                  : 'Sin repartidor'}
               </p>
             </div>
           </div>
@@ -193,36 +283,36 @@ const { user } = useAuth();
       <Card>
         <CardContent className="p-6">
           <h2 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">
-            Resumen de productos
+            Resumen de articulos
           </h2>
 
-          {products.length === 0 ? (
+          {articulos.length === 0 ? (
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              No hay productos cargados desde Crear Pedido.
+              No hay articulos cargados desde Crear Pedido.
             </p>
           ) : (
             <div className="space-y-4">
-              {products.map((product, index) => (
+              {articulos.map((articulo, index) => (
                 <div
-                  key={`${product.descripcion}-${index}`}
+                  key={`${articulo.descripcion}-${index}`}
                   className="grid grid-cols-1 md:grid-cols-3 gap-2 border rounded-md p-4"
                 >
                   <div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">Descripcion</p>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                      {product.descripcion}
+                      {articulo.descripcion}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">Cantidad</p>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                      {product.cantidad}
+                      {articulo.cantidad}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">Precio</p>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                      ${product.precio.toFixed(2)}
+                      ${articulo.precio.toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -230,7 +320,7 @@ const { user } = useAuth();
 
               <div className="flex justify-between items-center pt-2">
                 <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  Cantidad de articulos: {products.length}
+                  Cantidad de articulos: {articulos.length}
                 </span>
                 <span className="text-lg font-bold text-primary">Total: ${total.toFixed(2)}</span>
               </div>
@@ -242,10 +332,11 @@ const { user } = useAuth();
       <div className="flex justify-stretch sm:justify-end">
         <Button
           type="button"
-          disabled={!hasAllFormData}
+          onClick={handleSavePedido}
+          disabled={!hasAllFormData || savingPedido}
           className="bg-blue-500 text-white hover:bg-blue-500/90 w-full sm:w-auto"
         >
-          Listo
+          {savingPedido ? 'Guardando...' : 'Listo'}
         </Button>
       </div>
     </div>
