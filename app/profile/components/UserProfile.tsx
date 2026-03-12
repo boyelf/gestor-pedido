@@ -98,6 +98,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
         setIsLoggingOut(true);
         try {
             await logout();
+            sessionStorage.clear();
             toast.success('Sesión cerrada correctamente');
             router.push('/');
         } catch (error) {

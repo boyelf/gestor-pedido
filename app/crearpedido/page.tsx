@@ -1,10 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, LayoutGrid } from 'lucide-react';
+import { AvatarBadge } from '@/components/ui/AvatarBadge';
+import { useAuth } from '@/context/AuthContext';
+import { getImageUrlWithTimestamp } from '@/lib/utils';
 
 interface Product {
   descripcion: string;
@@ -13,17 +17,37 @@ interface Product {
 }
 
 const CrearPedidoPage: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+
+    const storedProducts = sessionStorage.getItem('pedidoProducts');
+    if (!storedProducts) {
+      return [];
+    }
+
+    try {
+      return JSON.parse(storedProducts) as Product[];
+    } catch {
+      sessionStorage.removeItem('pedidoProducts');
+      return [];
+    }
+  });
   const [descripcion, setDescripcion] = useState('');
   const [cantidad, setCantidad] = useState<number>(1);
-  const [precio, setPrecio] = useState<number>(0);
+  const [precio, setPrecio] = useState<number>(1);
+
+  useEffect(() => {
+    sessionStorage.setItem('pedidoProducts', JSON.stringify(products));
+  }, [products]);
 
   const addProduct = () => {
     if (descripcion.trim() && cantidad > 0 && precio >= 0) {
       setProducts([...products, { descripcion, cantidad, precio }]);
       setDescripcion('');
       setCantidad(1);
-      setPrecio(0);
+      setPrecio(1);
     }
   };
 
@@ -33,8 +57,27 @@ const CrearPedidoPage: React.FC = () => {
 
   const total = products.reduce((sum, product) => sum + product.cantidad * product.precio, 0);
 
+const { user } = useAuth();
+
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    
+        <div>
+    <nav className="px-6 py-4 flex justify-between border-b">
+        <div className="text-xl font-extrabold tracking-tight flex items-center gap-3" >
+            <LayoutGrid size={32}/>
+           Gestor Pedidos
+        </div>
+        {user && (
+        
+        <Link href="/profile" >
+           <AvatarBadge name={user?.name || "Usuario"} avatar_url={getImageUrlWithTimestamp(user?.avatar_url) || undefined} />
+        </Link>
+        
+        )}
+        
+    </nav>
+    
+        <div className="container mx-auto p-6 pb-24 md:pb-6 max-w-4xl">
       <h1 className="text-2xl font-bold mb-6 text-slate-900 dark:text-slate-100">Crear Pedido</h1>
 
       {/* Add Product Form */}
@@ -55,11 +98,13 @@ const CrearPedidoPage: React.FC = () => {
                 Cantidad (unidades)
               </label>
               <Input
-                type="number"
+                type="text"
                 placeholder="Ej: 2"
                 value={cantidad}
                 onChange={(e) => setCantidad(Number(e.target.value))}
-                min="1"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength="3"
               />
             </div>
             <div className="space-y-2">
@@ -67,12 +112,13 @@ const CrearPedidoPage: React.FC = () => {
                 Precio (por unidad)
               </label>
               <Input
-                type="number"
+                type="text"
                 placeholder="Ej: 10.50"
                 value={precio}
                 onChange={(e) => setPrecio(Number(e.target.value))}
-                min="0"
-                step="0.01"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength="4"
               />
             </div>
           </div>
@@ -133,9 +179,36 @@ const CrearPedidoPage: React.FC = () => {
             <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">Cant. articulos:</span>
             <span className="text-2xl font-bold text-primary">{products.length}</span>
           </div> */}
+          <div className="mt-6 hidden md:flex md:justify-end">
+            {products.length === 0 ? (
+              <Button type="button" disabled>
+                Continuar a datos del cliente
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href="/datoscliente">Continuar a datos del cliente</Link>
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-4 backdrop-blur md:hidden">
+        <div className="mx-auto max-w-4xl">
+          {products.length === 0 ? (
+            <Button type="button" disabled className="w-full">
+              Continuar a datos del cliente
+            </Button>
+          ) : (
+            <Button asChild className="w-full">
+              <Link href="/datoscliente">Continuar a datos del cliente</Link>
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
+    </div>
+    
   );
 };
 
