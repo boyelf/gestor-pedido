@@ -1,116 +1,200 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { BookOpen, Check, Settings, User2 } from 'lucide-react'
+'use client'
 
-const TarjetaPedido: React.FC = () => {
+import React, { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { BookOpen, Check, Settings, Trophy, User2, CircleDashed } from 'lucide-react'
+import type { EstadoPedido, Pedido } from '@/actions/pedido/get-pedidos'
+import { updateEstadoPedido } from '@/actions/pedido/update-estado-pedido'
+import toast from 'react-hot-toast'
+
+interface TarjetaPedidoProps {
+  pedido: Pedido
+  onEstadoUpdated: (pedidoId: string, estado: EstadoPedido) => void
+}
+
+const estadoStyles: Record<EstadoPedido, string> = {
+  pendiente: 'bg-slate-500',
+  'en-proceso': 'bg-amber-500',
+  completado: 'bg-green-600',
+  cancelado: 'bg-rose-600',
+}
+
+const estadoLabels: Record<EstadoPedido, string> = {
+  pendiente: 'Pendiente',
+  'en-proceso': 'En proceso',
+  completado: 'Completado',
+  cancelado: 'Cancelado',
+}
+
+function formatFecha(value: string | null) {
+  if (!value) return 'Sin fecha'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Sin fecha'
+
+  return date.toLocaleString('es-DO', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })
+}
+
+const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({ pedido, onEstadoUpdated }) => {
+  const [isUpdating, setIsUpdating] = useState(false)
+
+  const nextEstado: EstadoPedido | null =
+    pedido.estado === 'pendiente'
+      ? 'en-proceso'
+      : pedido.estado === 'en-proceso'
+        ? 'completado'
+        : null
+
+  const actionLabel =
+    pedido.estado === 'en-proceso'
+      ? 'Terminar'
+      : pedido.estado === 'completado'
+        ? 'Completado'
+        : pedido.estado === 'cancelado'
+          ? 'Cancelado'
+          : 'Iniciar'
+
+  const handleAccionPedido = async () => {
+    if (!nextEstado || isUpdating) return
+
+    setIsUpdating(true)
+    try {
+      const { error } = await updateEstadoPedido({
+        pedidoId: pedido.id,
+        estado: nextEstado,
+      })
+
+      if (error) {
+        toast.error(error)
+        return
+      }
+
+      onEstadoUpdated(pedido.id, nextEstado)
+      toast.success('Estado actualizado')
+    } catch (error) {
+      console.error(error)
+      toast.error('No se pudo actualizar el estado')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   return (
     <Card className="max-w-md w-full overflow-hidden">
-      {/* Header Image Section */}
-      <div className="relative h-48 w-full bg-slate-200 dark:bg-slate-800">
+      <div className="relative h-44 w-full bg-slate-200 dark:bg-slate-800">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: "url('/food-delivery-symbol-logo.png')"
-          }}
+          style={{ backgroundImage: "url('/food-delivery-symbol-logo.png')" }}
         />
         <div className="absolute top-4 right-4">
-          <span className="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-            En proceso
+          <span
+            className={`${estadoStyles[pedido.estado]} text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm`}
+          >
+            {estadoLabels[pedido.estado]}
           </span>
         </div>
       </div>
 
-      {/* Content Section */}
       <CardContent className="p-6">
-        {/* Order ID & Messenger Info */}
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-slate-900 dark:text-slate-100 text-xl font-bold tracking-tight">Pedido #82934</h2>
-            <div className="flex items-center gap-2 mt-1 text-slate-500 dark:text-slate-400">
-              <span className="material-symbols-outlined text-lg"><User2 /></span>
-              <p className="text-sm font-medium">Mensajero: Carlos Rodríguez</p>
+            <h2 className="text-slate-900 dark:text-slate-100 text-xl font-bold tracking-tight">
+              Pedido #{pedido.id_pedido}
+            </h2>
+            <div className="flex items-center gap-1 mt-2">
+              <span className="material-symbols-outlined text-md">
+                <User2 size={20} />
+              </span>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                Carlos Rodriguez
+              </p>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+              {pedido.direccion || 'Sin direccion'}
+            </p>
+
+            <div className="mt-4 space-y-0 relative">
+              <div className="absolute left-[11px] top-3 bottom-3 w-[2px] bg-yellow-400 dark:bg-slate-800"></div>
+
+              <div className="relative flex gap-4 pb-6">
+                <div className="z-10 bg-white dark:bg-slate-900 rounded-full h-6 w-6 flex items-center justify-center border-2 border-primary">
+                  <span className="material-symbols-outlined text-primary text-[14px] font-bold">
+                    <Check />
+                  </span>
+                </div>
+                <div>
+                  <p className="text-slate-900 dark:text-slate-100 text-sm font-semibold">Pedido Creado</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs">
+                    {formatFecha(pedido.fecha_creacion)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative flex gap-4 pb-6">
+                <div className="z-10 bg-white dark:bg-slate-900 rounded-full h-6 w-6 flex items-center justify-center border-2 border-primary">
+                  {pedido.estado === 'en-proceso' || pedido.estado === 'completado' ? (
+                    <span className="material-symbols-outlined text-primary text-[14px] font-bold">
+                      <Check />
+                    </span>
+                  ) : (
+                    <span className="material-symbols-outlined text-slate-500 text-[14px] font-bold">
+                      <CircleDashed />
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-slate-900 dark:text-slate-100 text-sm font-semibold">Inicio de Entrega</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs">
+                    {pedido.estado === 'pendiente' ? 'Pendiente' : 'En proceso'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative flex gap-4">
+                <div className="z-10 bg-slate-100 dark:bg-slate-800 rounded-full h-6 w-6 flex items-center justify-center border-2 border-slate-200 dark:border-slate-700">
+                  {pedido.estado === 'completado' ? (
+                    <span className="material-symbols-outlined text-green-500 text-[14px] font-bold">
+                      <Trophy />
+                    </span>
+                  ) : (
+                    <span className="material-symbols-outlined text-slate-500 text-[14px] font-bold">
+                      <CircleDashed />
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-slate-900 dark:text-slate-100 text-sm font-semibold">Entrega terminada</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs">
+                    {pedido.estado === 'completado' ? 'Completado' : 'Sin completar'}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           <div className="bg-primary/10 p-2 rounded-lg">
-            <span className="material-symbols-outlined text-primary"><Settings /></span>
+            <Settings className="text-primary" size={18} />
           </div>
         </div>
 
-        {/* Timeline Section */}
-        <div className="space-y-0 relative">
-          {/* Timeline Line */}
-          <div className="absolute left-[11px] top-3 bottom-3 w-[2px] bg-slate-100 dark:bg-slate-800"></div>
-
-          {/* Event 1: Created */}
-          <div className="relative flex gap-4 pb-6">
-            <div className="z-10 bg-white dark:bg-slate-900 rounded-full h-6 w-6 flex items-center justify-center border-2 border-primary">
-              <span className="material-symbols-outlined text-primary text-[14px] font-bold">
-                <Check />
-                </span>
-            </div>
-            <div>
-              <p className="text-slate-900 dark:text-slate-100 text-sm font-semibold">Pedido Creado</p>
-              <p className="text-slate-500 dark:text-slate-400 text-xs">12 May, 2024 - 10:30 AM</p>
-            </div>
-          </div>
-
-          {/* Event 2: Start */}
-          <div className="relative flex gap-4 pb-6">
-            <div className="z-10 bg-white dark:bg-slate-900 rounded-full h-6 w-6 flex items-center justify-center border-2 border-primary">
-              <span className="material-symbols-outlined text-primary text-[14px] font-bold"><Check /></span>
-            </div>
-            <div>
-              <p className="text-slate-900 dark:text-slate-100 text-sm font-semibold">Inicio de Entrega</p>
-              <p className="text-slate-500 dark:text-slate-400 text-xs">12 May, 2024 - 10:45 AM</p>
-            </div>
-          </div>
-
-          {/* Event 3: Estimated Delivery */}
-          <div className="relative flex gap-4">
-            <div className="z-10 bg-slate-100 dark:bg-slate-800 rounded-full h-6 w-6 flex items-center justify-center border-2 border-slate-200 dark:border-slate-700">
-              <span className="material-symbols-outlined text-slate-400 text-[14px]">schedule</span>
-            </div>
-            <div>
-              <p className="text-slate-900 dark:text-slate-100 text-sm font-semibold">Entrega Estimada</p>
-              <p className="text-slate-500 dark:text-slate-400 text-xs">12 May, 2024 - 11:15 AM</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
         <div className="mt-8 flex gap-3">
           <button className="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined text-sm"><BookOpen /></span>
+            <BookOpen size={16} />
             Detalles
           </button>
-          <button className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 p-3 rounded-lg transition-colors">
-            <span className="material-symbols-outlined">opcion</span>
+          <button
+            id="accion-pedido"
+            onClick={handleAccionPedido}
+            disabled={!nextEstado || isUpdating}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-3 rounded-lg transition-colors"
+          >
+            {isUpdating ? 'Actualizando...' : actionLabel}
           </button>
         </div>
       </CardContent>
-
-      {/* Secondary States (Footer Info) */}
-      <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-t border-slate-100 dark:border-slate-800">
-        <div className="flex items-center justify-between opacity-60">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Otros estados</span>
-          <div className="flex gap-3">
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
-              <span className="text-[10px] text-slate-500">Pendiente</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-              <span className="text-[10px] text-slate-500">Completado</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-              <span className="text-[10px] text-slate-500">Cancelado</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </Card>
-  );
-};
+  )
+}
 
-export default TarjetaPedido;
+export default TarjetaPedido

@@ -5,7 +5,7 @@ import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { getImageUrlWithTimestamp } from "@/lib/utils";
-import { TaskList } from "./components/TaskList";
+import { ListaPedidos } from "./components/ListaPedidos";
 
 export default function DashboardPage() {
 
@@ -29,7 +29,7 @@ return (
         
     </nav>
     
-    <TaskList />
+    <ListaPedidos />
     </div>
 )
 }
