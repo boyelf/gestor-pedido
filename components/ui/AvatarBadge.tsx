@@ -22,7 +22,7 @@ export const AvatarBadge = ({ name, avatar_url }: AvatarBadgeProps) => {
 
         <Badge className='gap-2'>
             <Avatar>
-                <AvatarImage src={avatar_url || ''} />
+                {/* <AvatarImage src={avatar_url || ''} /> */}
                 <AvatarFallback className='text-neutral-500'>{getInitials(name)}</AvatarFallback>
             </Avatar>
             {name}

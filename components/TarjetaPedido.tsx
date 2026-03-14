@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { BookOpen, Check, Settings, Trophy, User2, CircleDashed } from 'lucide-react'
 import type { EstadoPedido, Pedido } from '@/actions/pedido/get-pedidos'
@@ -108,7 +109,7 @@ const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({ pedido, onEstadoUpdated }
                 <User2 size={20} />
               </span>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                Carlos Rodriguez
+                {pedido.repartidor?.nombre} {pedido.repartidor?.apellido}
               </p>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
@@ -179,10 +180,14 @@ const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({ pedido, onEstadoUpdated }
         </div>
 
         <div className="mt-8 flex gap-3">
-          <button className="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+          <Link
+            id="detalles-pedido"
+            href={`/detallepedido/${pedido.id}`}
+            className="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
             <BookOpen size={16} />
             Detalles
-          </button>
+          </Link>
           <button
             id="accion-pedido"
             onClick={handleAccionPedido}
