@@ -74,6 +74,7 @@ const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({ pedido, onEstadoUpdated }
 
       onEstadoUpdated(pedido.id, nextEstado)
       toast.success('Estado actualizado')
+      pedido.fecha_inicio_entrega = nextEstado === 'en-proceso' ? new Date().toISOString() : pedido.fecha_inicio_entrega
     } catch (error) {
       console.error(error)
       toast.error('No se pudo actualizar el estado')
@@ -148,7 +149,7 @@ const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({ pedido, onEstadoUpdated }
                 <div>
                   <p className="text-slate-900 dark:text-slate-100 text-sm font-semibold">Inicio de Entrega</p>
                   <p className="text-slate-500 dark:text-slate-400 text-xs">
-                    {pedido.estado === 'pendiente' ? 'Pendiente' : 'En proceso'}
+                    {pedido.estado === 'pendiente' ? 'Pendiente' : formatFecha(pedido.fecha_inicio_entrega)}
                   </p>
                 </div>
               </div>
@@ -168,7 +169,7 @@ const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({ pedido, onEstadoUpdated }
                 <div>
                   <p className="text-slate-900 dark:text-slate-100 text-sm font-semibold">Entrega terminada</p>
                   <p className="text-slate-500 dark:text-slate-400 text-xs">
-                    {pedido.estado === 'completado' ? 'Completado' : 'Sin completar'}
+                    {pedido.fecha_terminacion ? formatFecha(pedido.fecha_terminacion) : 'Sin terminar'}
                   </p>
                 </div>
               </div>

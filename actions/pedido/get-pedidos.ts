@@ -11,6 +11,8 @@ export interface Pedido {
   direccion: string | null
   estado: EstadoPedido
   fecha_creacion: string | null
+  fecha_inicio_entrega: string | null
+  fecha_terminacion: string | null
   repartidor: repartidor | null
 }
 
@@ -46,7 +48,7 @@ export async function getPedidos({
 
     let query = supabase
       .from('pedido')
-      .select('id, id_pedido, descripcion, direccion, estado, fecha_creacion, repartidor (id, nombre, apellido)',
+      .select('id, id_pedido, descripcion, direccion, estado, fecha_creacion, fecha_inicio_entrega, fecha_terminacion, repartidor (id, nombre, apellido)',
        { count: 'exact' })
       .eq('user_id', user.id)
       .order('fecha_creacion', { ascending: false })

@@ -21,18 +21,20 @@ export async function updateEstadoPedido({ pedidoId, estado }: UpdateEstadoPedid
         }
 
         const shouldSetFechaTerminacion = estado === 'completado' || estado === 'cancelado'
+        const shouldSetFechaInicioEntrega = estado === 'en-proceso'
 
         const { data, error } = await supabase
             .from('pedido')
             .update([
                 {
                     estado,
+                    fecha_inicio_entrega: shouldSetFechaInicioEntrega ? new Date().toISOString() : undefined,
                     fecha_terminacion: shouldSetFechaTerminacion ? new Date().toISOString() : null,
                 },
             ])
             .eq('id', pedidoId)
             .eq('user_id', user.id)
-            .select('id, estado, fecha_terminacion')
+            .select('id, estado, fecha_terminacion, fecha_inicio_entrega')
             .single()
 
         if (error) {

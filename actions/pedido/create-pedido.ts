@@ -69,6 +69,7 @@ export async function createPedido(data: CreatePedidoData) {
     const articulosWithPedidoId = articulosPayload.map((articulo) => ({
       ...articulo,
       pedido_id: pedidoData.id,
+      user_id: user.id,
     }))
 
     if (articulosWithPedidoId.length > 0) {
