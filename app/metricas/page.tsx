@@ -1,107 +1,145 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { LayoutGrid, Clock3, Truck, ReceiptText } from 'lucide-react'
+import { LayoutGrid, Clock3, Truck, ReceiptText, Loader2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 import { AvatarBadge } from '@/components/ui/AvatarBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
 import { getImageUrlWithTimestamp } from '@/lib/utils'
+import { getMetricasData } from '@/actions/metricas/get-metricas'
 
 type TiempoEntregaMetrica = {
  repartidor: string
  masLargo: string
  masCorto: string
  promedioTotalPedidos: string
+ pedidosCompletados: number
 }
 
 type PedidosEntregadosMetrica = {
- repartidor: string
+ usuario: string
  hoy: number
  estaSemana: number
  esteMes: number
+ esteAno: number
  totalHistorico: number
 }
 
 type ValorPedidoMetrica = {
+ pedidoId: string
  pedidoNumero: number
  nombreRepartidor: string
- totalPedido: string
+ totalPedido: number
  fechaCreacion: string
 }
 
-const tiemposEntrega: TiempoEntregaMetrica[] = [
- {
- repartidor: 'Carlos Pena',
- masLargo: '1h 35m',
- masCorto: '18m',
- promedioTotalPedidos: '42m',
- },
- {
- repartidor: 'Maria Diaz',
- masLargo: '1h 08m',
- masCorto: '15m',
- promedioTotalPedidos: '37m',
- },
- {
- repartidor: 'Jose Ramirez',
- masLargo: '1h 20m',
- masCorto: '20m',
- promedioTotalPedidos: '45m',
- },
-]
+function formatMinutes(value: number | null | undefined): string {
+ if (value == null || !Number.isFinite(value)) return '0m'
 
-const pedidosEntregados: PedidosEntregadosMetrica[] = [
- {
- repartidor: 'Carlos Pena',
- hoy: 6,
- estaSemana: 34,
- esteMes: 128,
- totalHistorico: 842,
- },
- {
- repartidor: 'Maria Diaz',
- hoy: 8,
- estaSemana: 39,
- esteMes: 141,
- totalHistorico: 901,
- },
- {
- repartidor: 'Jose Ramirez',
- hoy: 5,
- estaSemana: 29,
- esteMes: 117,
- totalHistorico: 770,
- },
-]
+ const rounded = Math.round(value)
+ const hours = Math.floor(rounded / 60)
+ const minutes = rounded % 60
 
-const valorPedidos: ValorPedidoMetrica[] = [
- {
- pedidoNumero: 1043,
- nombreRepartidor: 'Carlos Pena',
- totalPedido: '$48.50',
- fechaCreacion: '14 Mar 2026, 09:15 AM',
- },
- {
- pedidoNumero: 1044,
- nombreRepartidor: 'Maria Diaz',
- totalPedido: '$62.00',
- fechaCreacion: '14 Mar 2026, 10:42 AM',
- },
- {
- pedidoNumero: 1045,
- nombreRepartidor: 'Jose Ramirez',
- totalPedido: '$37.75',
- fechaCreacion: '14 Mar 2026, 11:08 AM',
- },
-]
+ if (hours <= 0) return `${minutes}m`
+ if (minutes === 0) return `${hours}h`
+ return `${hours}h ${minutes}m`
+}
+
+function formatCurrency(value: number): string {
+ return `$${value.toFixed(2)}`
+}
+
+function formatDateTime(value: string): string {
+ const date = new Date(value)
+ if (Number.isNaN(date.getTime())) return '-'
+
+ return new Intl.DateTimeFormat('es-BO', {
+ day: '2-digit',
+ month: 'short',
+ year: 'numeric',
+ hour: '2-digit',
+ minute: '2-digit',
+ }).format(date)
+}
 
 export default function MetricasPage() {
  const { user } = useAuth()
- const valorTotalPedidos = valorPedidos.reduce((acc, item) => {
- const amount = Number(item.totalPedido.replace('$', ''))
- return acc + (Number.isFinite(amount) ? amount : 0)
- }, 0)
+ const [loading, setLoading] = useState(true)
+ const [tiemposEntrega, setTiemposEntrega] = useState<TiempoEntregaMetrica[]>([])
+ const [pedidosEntregados, setPedidosEntregados] = useState<PedidosEntregadosMetrica[]>([])
+ const [valorPedidos, setValorPedidos] = useState<ValorPedidoMetrica[]>([])
+
+ useEffect(() => {
+ let isMounted = true
+
+ const loadMetricas = async () => {
+ setLoading(true)
+ const { data, error } = await getMetricasData()
+
+ if (!isMounted) {
+ return
+ }
+
+ if (error || !data) {
+ toast.error(error || 'No se pudo cargar metricas')
+ setTiemposEntrega([])
+ setPedidosEntregados([])
+ setValorPedidos([])
+ setLoading(false)
+ return
+ }
+
+ setTiemposEntrega(
+ data.tiemposEntrega.map((item) => ({
+ repartidor: item.nombre_repartidor || 'Sin nombre',
+ masLargo: formatMinutes(item.min_mas_largo),
+ masCorto: formatMinutes(item.min_mas_corto),
+ promedioTotalPedidos: formatMinutes(item.min_promedio),
+ pedidosCompletados: item.total_pedidos_completados || 0,
+ }))
+ )
+
+ if (data.pedidosUsuarioTiempo) {
+ setPedidosEntregados([
+ {
+ usuario: 'Tu empresa',
+ hoy: data.pedidosUsuarioTiempo.pedidos_hoy || 0,
+ estaSemana: data.pedidosUsuarioTiempo.pedidos_semana || 0,
+ esteMes: data.pedidosUsuarioTiempo.pedidos_mes || 0,
+ esteAno: data.pedidosUsuarioTiempo.pedidos_ano || 0,
+ totalHistorico: data.pedidosUsuarioTiempo.total_historico_usuario || 0,
+ },
+ ])
+ } else {
+ setPedidosEntregados([])
+ }
+
+ setValorPedidos(
+ data.valorPedidos.map((item) => ({
+ pedidoId: item.pedido_id,
+ pedidoNumero: item.numero_pedido_incremental || 0,
+ nombreRepartidor: item.nombre_repartidor || 'Sin repartidor',
+ totalPedido: item.total_pedido || 0,
+ fechaCreacion: item.fecha_creacion ? formatDateTime(item.fecha_creacion) : '-',
+ }))
+ )
+
+ setLoading(false)
+ }
+
+ loadMetricas()
+
+ return () => {
+ isMounted = false
+ }
+ }, [])
+
+ const valorTotalPedidos = useMemo(() => {
+ return valorPedidos.reduce((acc, item) => acc + item.totalPedido, 0)
+ }, [valorPedidos])
 
  return (
  <div>
@@ -122,6 +160,14 @@ export default function MetricasPage() {
  </nav>
 
  <main className='space-y-10 py-8 px-6'>
+ {loading ? (
+ <Card>
+ <CardContent className='p-10 flex items-center justify-center'>
+ <Loader2 className='h-7 w-7 animate-spin text-slate-400' />
+ </CardContent>
+ </Card>
+ ) : (
+ <>
  <section className='space-y-6'>
  <div className='space-y-1'>
  <h1 className='text-3xl font-bold text-slate-900 dark:text-slate-100'>Pedidos</h1>
@@ -135,7 +181,16 @@ export default function MetricasPage() {
  </div>
 
  <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'>
- {tiemposEntrega.map((item) => (
+ {tiemposEntrega.length === 0 ? (
+ <Card className='md:col-span-2 xl:col-span-3'>
+ <CardContent className='p-6'>
+ <p className='text-sm text-slate-500 dark:text-slate-400'>
+ No hay tiempos de entrega disponibles.
+ </p>
+ </CardContent>
+ </Card>
+ ) : (
+ tiemposEntrega.map((item) => (
  <Card key={item.repartidor} className='overflow-hidden'>
  <CardContent className='p-6 space-y-4'>
  <div className='flex items-center justify-between'>
@@ -161,9 +216,14 @@ export default function MetricasPage() {
  <p className='text-xs text-slate-500 dark:text-slate-400'>Promedio total de pedidos</p>
  <p className='text-sm font-semibold text-slate-900 dark:text-slate-100'>{item.promedioTotalPedidos}</p>
  </div>
+ <div className='rounded-md border p-3'>
+ <p className='text-xs text-slate-500 dark:text-slate-400'>Pedidos completados</p>
+ <p className='text-sm font-semibold text-slate-900 dark:text-slate-100'>{item.pedidosCompletados}</p>
+ </div>
  </CardContent>
  </Card>
- ))}
+ ))
+ )}
  </div>
  </div>
 
@@ -174,15 +234,24 @@ export default function MetricasPage() {
  </div>
 
  <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'>
- {pedidosEntregados.map((item) => (
- <Card key={item.repartidor} className='overflow-hidden'>
+ {pedidosEntregados.length === 0 ? (
+ <Card className='md:col-span-2 xl:col-span-3'>
+ <CardContent className='p-6'>
+ <p className='text-sm text-slate-500 dark:text-slate-400'>
+ No hay metricas de pedidos entregados.
+ </p>
+ </CardContent>
+ </Card>
+ ) : (
+ pedidosEntregados.map((item) => (
+ <Card key={item.usuario} className='overflow-hidden'>
  <CardContent className='p-6 space-y-4'>
  <div className='flex items-center justify-between'>
- <p className='text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400'>Repartidor</p>
+ <p className='text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400'>Usuario</p>
  <span className='text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'>Entregas</span>
  </div>
 
- <p className='text-lg font-bold text-slate-900 dark:text-slate-100'>{item.repartidor}</p>
+ <p className='text-lg font-bold text-slate-900 dark:text-slate-100'>{item.usuario}</p>
 
  <div className='grid grid-cols-2 gap-3'>
  <div className='rounded-md border p-3'>
@@ -199,6 +268,10 @@ export default function MetricasPage() {
  <p className='text-xs text-slate-500 dark:text-slate-400'>Este mes</p>
  <p className='text-sm font-semibold text-slate-900 dark:text-slate-100'>{item.esteMes}</p>
  </div>
+ <div className='rounded-md border p-3'>
+ <p className='text-xs text-slate-500 dark:text-slate-400'>Este año</p>
+ <p className='text-sm font-semibold text-slate-900 dark:text-slate-100'>{item.esteAno}</p>
+ </div>
 
  <div className='rounded-md border p-3'>
  <p className='text-xs text-slate-500 dark:text-slate-400'>Total historico</p>
@@ -207,7 +280,8 @@ export default function MetricasPage() {
  </div>
  </CardContent>
  </Card>
- ))}
+ ))
+ )}
  </div>
  </div>
  </section>
@@ -224,12 +298,19 @@ export default function MetricasPage() {
  <h2 className='text-lg font-semibold text-slate-900 dark:text-slate-100'>Valor de los pedidos</h2>
  </div>
  <p className='text-sm text-slate-500 dark:text-slate-400'>
- Valor total: <span className='text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'>${valorTotalPedidos.toFixed(2)}</span>
+ Valor total: <span className='text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'>{formatCurrency(valorTotalPedidos)}</span>
  </p>
 
  <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'>
- {valorPedidos.map((item) => (
- <Card key={item.pedidoNumero} className='overflow-hidden'>
+ {valorPedidos.length === 0 ? (
+ <Card className='md:col-span-2 xl:col-span-3'>
+ <CardContent className='p-6'>
+ <p className='text-sm text-slate-500 dark:text-slate-400'>No hay pedidos para mostrar.</p>
+ </CardContent>
+ </Card>
+ ) : (
+ valorPedidos.map((item) => (
+ <Card key={item.pedidoId} className='overflow-hidden'>
  <CardContent className='p-6 space-y-4'>
  <div className='flex items-center justify-between'>
  <p className='text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400'>#Pedido</p>
@@ -246,7 +327,9 @@ export default function MetricasPage() {
 
  <div className='rounded-md border p-3'>
  <p className='text-xs text-slate-500 dark:text-slate-400'>Total pedido</p>
- <p className='text-sm font-semibold text-slate-900 dark:text-slate-100'>{item.totalPedido}</p>
+ <p className='text-sm font-semibold text-slate-900 dark:text-slate-100'>
+ {formatCurrency(item.totalPedido)}
+ </p>
  </div>
 
  <div className='rounded-md border p-3'>
@@ -256,11 +339,15 @@ export default function MetricasPage() {
  </div>
  </CardContent>
  </Card>
- ))}
+ ))
+ )}
  </div>
  </div>
  </section>
+ </>
+ )}
  </main>
  </div>
  )
 }
+
