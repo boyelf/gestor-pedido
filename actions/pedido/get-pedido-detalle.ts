@@ -15,6 +15,16 @@ interface ArticuloPedido {
  precio: number
 }
 
+type PedidoDetalleRow = {
+ id: string
+ id_pedido: number
+ descripcion: string | null
+ direccion: string | null
+ estado: 'pendiente' | 'en-proceso' | 'completado' | 'cancelado'
+ repartidor: Repartidor | Repartidor[] | null
+ articulo: ArticuloPedido[] | null
+}
+
 export interface PedidoDetalle {
  id: string
  id_pedido: number
@@ -23,6 +33,11 @@ export interface PedidoDetalle {
  estado: 'pendiente' | 'en-proceso' | 'completado' | 'cancelado'
  repartidor: Repartidor | null
  articulo: ArticuloPedido[]
+}
+
+function normalizeRepartidor(repartidor: Repartidor | Repartidor[] | null): Repartidor | null {
+ if (!repartidor) return null
+ return Array.isArray(repartidor) ? (repartidor[0] || null) : repartidor
 }
 
 export async function getPedidoDetalle(pedidoId: string) {
@@ -62,7 +77,16 @@ export async function getPedidoDetalle(pedidoId: string) {
  return { pedido: null, error: error.message }
  }
 
- return { pedido: data as PedidoDetalle, error: null }
+ const row = data as PedidoDetalleRow
+
+ return {
+ pedido: {
+ ...row,
+ repartidor: normalizeRepartidor(row.repartidor),
+ articulo: row.articulo || [],
+ },
+ error: null,
+ }
  } catch (error) {
  console.error('Error fetching pedido detail:', error)
  return { pedido: null, error: 'Failed to fetch pedido detail' }

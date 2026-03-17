@@ -49,7 +49,7 @@ function formatMinutes(value: number | null | undefined): string {
 }
 
 function formatCurrency(value: number): string {
- return `$${value.toFixed(2)}`
+ return `${value.toLocaleString('en-US', { style: 'currency', currency: 'DOP' })}`
 }
 
 function formatDateTime(value: string): string {

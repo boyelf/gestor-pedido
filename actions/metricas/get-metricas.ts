@@ -72,6 +72,7 @@ export async function getMetricasData(): Promise<{
  'user_id, pedido_id, numero_pedido_incremental, nombre_repartidor, total_pedido, estado, fecha_creacion'
  )
  .eq('user_id', user.id)
+ .eq('estado', 'completado')
  .order('fecha_creacion', { ascending: false }),
  ])
 

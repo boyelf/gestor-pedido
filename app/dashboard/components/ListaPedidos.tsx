@@ -67,7 +67,7 @@ export function ListaPedidos() {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const observerTarget = useRef<HTMLDivElement>(null)
   const isLoadingRef = useRef(false)
-  const loadPedidosRef = useRef<(pageNum: number, reset: boolean) => Promise<void>>()
+  const loadPedidosRef = useRef<((pageNum: number, reset: boolean) => Promise<void>) | null>(null)
 
   useEffect(() => {
     setFilters((prev) => ({ ...prev, search: debouncedSearch }))
@@ -257,3 +257,4 @@ export function ListaPedidos() {
     </div>
   )
 }
+

@@ -4,29 +4,46 @@ import { createClient } from '@/lib/supabase/server'
 
 export type EstadoPedido = 'pendiente' | 'en-proceso' | 'completado' | 'cancelado'
 
-export interface Pedido {
-  id: string
-  id_pedido: number
-  descripcion: string | null
-  direccion: string | null
-  estado: EstadoPedido
-  fecha_creacion: string | null
-  fecha_inicio_entrega: string | null
-  fecha_terminacion: string | null
-  repartidor: repartidor | null
+interface Repartidor {
+ id: string
+ nombre: string
+ apellido: string
 }
 
-interface repartidor {
-  id: string
-  nombre: string
-  apellido: string
+type PedidoRow = {
+ id: string
+ id_pedido: number
+ descripcion: string | null
+ direccion: string | null
+ estado: EstadoPedido
+ fecha_creacion: string | null
+ fecha_inicio_entrega: string | null
+ fecha_terminacion: string | null
+ repartidor: Repartidor | Repartidor[] | null
+}
+
+export interface Pedido {
+ id: string
+ id_pedido: number
+ descripcion: string | null
+ direccion: string | null
+ estado: EstadoPedido
+ fecha_creacion: string | null
+ fecha_inicio_entrega: string | null
+ fecha_terminacion: string | null
+ repartidor: Repartidor | null
 }
 
 interface GetPedidosParams {
-  page?: number
-  pageSize?: number
-  estado?: 'all' | EstadoPedido
-  search?: string
+ page?: number
+ pageSize?: number
+ estado?: 'all' | EstadoPedido
+ search?: string
+}
+
+function normalizeRepartidor(repartidor: Repartidor | Repartidor[] | null): Repartidor | null {
+ if (!repartidor) return null
+ return Array.isArray(repartidor) ? (repartidor[0] || null) : repartidor
 }
 
 export async function getPedidos({
@@ -35,57 +52,62 @@ export async function getPedidos({
  estado = 'all',
  search = '',
 }: GetPedidosParams) {
-  try {
-    const supabase = await createClient()
+ try {
+ const supabase = await createClient()
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+ const {
+ data: { user },
+ } = await supabase.auth.getUser()
 
-    if (!user) {
-      return { pedidos: [], total: 0, error: 'No authenticated user' }
-    }
+ if (!user) {
+ return { pedidos: [], total: 0, error: 'No authenticated user' }
+ }
 
-    let query = supabase
-      .from('pedido')
-      .select('id, id_pedido, descripcion, direccion, estado, fecha_creacion, fecha_inicio_entrega, fecha_terminacion, repartidor (id, nombre, apellido)',
-       { count: 'exact' })
-      .eq('user_id', user.id)
-      .order('fecha_creacion', { ascending: false })
+ let query = supabase
+ .from('pedido')
+ .select('id, id_pedido, descripcion, direccion, estado, fecha_creacion, fecha_inicio_entrega, fecha_terminacion, repartidor (id, nombre, apellido)',
+ { count: 'exact' })
+ .eq('user_id', user.id)
+ .order('fecha_creacion', { ascending: false })
 
-    if (estado !== 'all') {
-      query = query.eq('estado', estado)
-    }
+ if (estado !== 'all') {
+ query = query.eq('estado', estado)
+ }
 
-    const normalizedSearch = search.trim()
-    if (normalizedSearch) {
-      const isNumericIdSearch = /^\d+$/.test(normalizedSearch)
+ const normalizedSearch = search.trim()
+ if (normalizedSearch) {
+ const isNumericIdSearch = /^\d+$/.test(normalizedSearch)
 
-      if (isNumericIdSearch) {
-        query = query.or(
-          `direccion.ilike.%${normalizedSearch}%,id_pedido.eq.${Number(normalizedSearch)}`
-        )
-      } else {
-        query = query.ilike('direccion', `%${normalizedSearch}%`)
-      }
-    }
+ if (isNumericIdSearch) {
+ query = query.or(
+ `direccion.ilike.%${normalizedSearch}%,id_pedido.eq.${Number(normalizedSearch)}`
+ )
+ } else {
+ query = query.ilike('direccion', `%${normalizedSearch}%`)
+ }
+ }
 
-    const offset = page * pageSize
-    query = query.range(offset, offset + pageSize - 1)
+ const offset = page * pageSize
+ query = query.range(offset, offset + pageSize - 1)
 
-    const { data, error, count } = await query
+ const { data, error, count } = await query
 
-    if (error) {
-      return { pedidos: [], total: 0, error: error.message }
-    }
+ if (error) {
+ return { pedidos: [], total: 0, error: error.message }
+ }
 
-    return {
-      pedidos: (data as Pedido[]) || [],
-      total: count || 0,
-      error: null,
-    }
-  } catch (error) {
-    console.error('Error fetching pedidos:', error)
-    return { pedidos: [], total: 0, error: 'Failed to fetch pedidos' }
-  }
+ const normalizedPedidos = ((data || []) as PedidoRow[]).map((pedido) => ({
+ ...pedido,
+ repartidor: normalizeRepartidor(pedido.repartidor),
+ }))
+
+ return {
+ pedidos: normalizedPedidos as Pedido[],
+ total: count || 0,
+ error: null,
+ }
+ } catch (error) {
+ console.error('Error fetching pedidos:', error)
+ return { pedidos: [], total: 0, error: 'Failed to fetch pedidos' }
+ }
 }

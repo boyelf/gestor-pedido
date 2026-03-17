@@ -22,7 +22,7 @@ import toast from 'react-hot-toast'
 import { getTasks } from '@/actions/task/get-task'
 import { deleteTask } from '@/actions/task/delete-task'
 import Image from 'next/image'
-import TarjetaPedido from '@/components/TarjetaPedido'
+import { TaskCard } from './TaskCard'
 
 interface TaskListState {
   tasks: Task[]
@@ -61,7 +61,7 @@ export function TaskList() {
   const [isDeleting, setIsDeleting] = useState(false)
   const observerTarget = useRef<HTMLDivElement>(null)
   const isLoadingRef = useRef(false)
-  const loadTasksRef = useRef<(pageNum: number, reset: boolean) => Promise<void>>()
+  const loadTasksRef = useRef<((pageNum: number, reset: boolean) => Promise<void>) | null>(null)
 
   // Load tasks function
   const loadTasks = useCallback(
@@ -320,7 +320,20 @@ export function TaskList() {
         ) : (
           <>
             {state.tasks.map((task) => (
-             <TarjetaPedido key={task.id} />
+              <TaskCard
+                key={task.id}
+                task={{
+                  id: task.id,
+                  title: task.title,
+                  description: task.description,
+                  status: task.status,
+                  priority: task.priority,
+                  created_at: Number(task.created_at),
+                  image: task.image,
+                }}
+                onEdit={handleEditTask}
+                onDelete={(taskToDelete) => handleDelete(taskToDelete.id)}
+              />
             ))}
 
             {/* Infinite scroll trigger */}
