@@ -15,6 +15,7 @@ CREATE TABLE tasks (
   image TEXT
 );
 
+
 -- Crear índices para mejorar el rendimiento de consultas frecuentes
 CREATE INDEX idx_tasks_status ON tasks(status);
 CREATE INDEX idx_tasks_priority ON tasks(priority);
