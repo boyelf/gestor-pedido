@@ -216,7 +216,7 @@ useEffect(() => {
 
                         <div className="grid gap-4">
 
-                            <Button
+                            {/* <Button
                                 variant="outline"
                                 className="w-full justify-start h-14"
                                 onClick={handleEditClick}
@@ -228,10 +228,12 @@ useEffect(() => {
                                         Actualiza tu nombre y/o avatar
                                     </div>
                                 </div>
-                            </Button>
+                            </Button> */}
+
+                            
 
 
-                            <Link href="/update-password" intermediate-link="true">
+                            {/* <Link href="/update-password" intermediate-link="true">
                                 <Button
                                     variant="outline"
                                     className="w-full justify-start h-14"
@@ -245,7 +247,25 @@ useEffect(() => {
                                         </div>
                                     </div>
                                 </Button>
+                            </Link> */}
+
+                            <Link href="/metricas" intermediate-link="true">
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-start h-14"
+                                   
+                                >
+                                    <Key className="mr-3 h-5 w-5 text-primary" />
+                                    <div className="text-left">
+                                        <div className="font-medium">Metricas</div>
+                                        <div className="text-xs text-muted-foreground">
+                                            Ver estadísticas y métricas de tu cuenta
+                                        </div>
+                                    </div>
+                                </Button>
                             </Link>
+
+
 
                             <form>
                                 <Button
