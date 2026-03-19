@@ -198,6 +198,7 @@ const DatosClientePage: React.FC = () => {
                     value={descripcion}
                     onChange={(e) => setDescripcion(e.target.value)}
                     placeholder="Descripcion del pedido"
+                    maxLength={35}
                   />
                 </div>
 
@@ -210,6 +211,7 @@ const DatosClientePage: React.FC = () => {
                     value={direccion}
                     onChange={(e) => setDireccion(e.target.value)}
                     placeholder="Direccion de entrega"
+                    maxLength={35}
                   />
                 </div>
 

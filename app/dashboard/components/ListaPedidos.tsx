@@ -203,6 +203,7 @@ export function ListaPedidos() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full"
+            maxLength={35}
           />
         </div>
 

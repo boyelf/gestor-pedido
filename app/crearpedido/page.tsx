@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Plus, LayoutGrid } from 'lucide-react';
+import { Trash2, Plus, LayoutGrid, Hand } from 'lucide-react';
 import { AvatarBadge } from '@/components/ui/AvatarBadge';
 import { useAuth } from '@/context/AuthContext';
 import { getImageUrlWithTimestamp } from '@/lib/utils';
@@ -65,6 +65,52 @@ function formatCurrency(value: number): string {
  return `${value.toLocaleString('en-US', { style: 'currency', currency: 'DOP' })}`
 }
 
+  function handleCantidadChange(e: React.ChangeEvent<HTMLInputElement>) {
+
+    const val = e.target.value;
+
+    // 1. If input is empty, allow it (so user can backspace)
+    if (val === '') {
+      setCantidad('');
+      return;
+    }
+
+    // 2. Parse the string to an integer
+    const num = parseInt(val, 10);
+
+    // 3. Enforce Max 1000 and Min 1 logic
+    // This also prevents leading zeros because parseInt('05') becomes 5
+    if (num > 1000) {
+      setCantidad(1000);
+    } else if (num < 1) {
+      setCantidad(1);
+    } else {
+      setCantidad(num);
+    }
+  }
+
+  function handlePrecioChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+
+    // 1. If input is empty, allow it (so user can backspace)
+    if (val === '') {
+      setPrecio('');
+      return;
+    }
+
+    // 2. Parse the string to a float
+    const num = parseFloat(val);
+
+    // 3. Enforce Max 9000 and Min 0 logic
+    if (num > 9000) {
+      setPrecio(9000);
+    } else if (num < 1) {
+      setPrecio(1);
+    } else {
+      setPrecio(num);
+    }
+  }
+
   return (
     
         <div>
@@ -96,6 +142,7 @@ function formatCurrency(value: number): string {
               <Input
                 placeholder="Descripcion del producto"
                 value={descripcion}
+                maxLength={35}
                 onChange={(e) => setDescripcion(e.target.value)}
               />
             </div>
@@ -107,28 +154,7 @@ function formatCurrency(value: number): string {
                 type="text"
                 placeholder="Ej: 15"
                 value={cantidad}
-                  onChange={(e) => {
-                    const val = e.target.value;
-
-                    // 1. If input is empty, allow it (so user can backspace)
-                    if (val === '') {
-                      setCantidad('');
-                      return;
-                    }
-
-                    // 2. Parse the string to an integer
-                    const num = parseInt(val, 10);
-
-                    // 3. Enforce Max 1000 and Min 1 logic
-                    // This also prevents leading zeros because parseInt('05') becomes 5
-                    if (num > 1000) {
-                      setCantidad(1000);
-                    } else if (num < 1) {
-                      setCantidad(1);
-                    } else {
-                      setCantidad(num);
-                    }
-                  }}
+                  onChange={(e) => {handleCantidadChange(e)}}                    
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={4}
@@ -142,27 +168,7 @@ function formatCurrency(value: number): string {
                 type="text"
                 placeholder="Ej: 150"
                 value={precio}
-                  onChange={(e) => {
-                    const val = e.target.value;
-
-                    // 1. If input is empty, allow it (so user can backspace)
-                    if (val === '') {
-                      setPrecio('');
-                      return;
-                    }
-
-                    // 2. Parse the string to a float
-                    const num = parseFloat(val);
-
-                    // 3. Enforce Max 9000 and Min 0 logic
-                    if (num > 9000) {
-                      setPrecio(9000);
-                    } else if (num < 1) {
-                      setPrecio(1);
-                    } else {
-                      setPrecio(num);
-                    }
-                  }}
+                  onChange={(e) => handlePrecioChange(e)}
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={4}
