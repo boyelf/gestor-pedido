@@ -37,19 +37,19 @@ const CrearPedidoPage: React.FC = () => {
     }
   });
   const [descripcion, setDescripcion] = useState('');
-  const [cantidad, setCantidad] = useState<number>(1);
-  const [precio, setPrecio] = useState<number>(1);
+  const [cantidad, setCantidad] = useState<number | ''>('');
+  const [precio, setPrecio] = useState<number | ''>('');
 
   useEffect(() => {
     sessionStorage.setItem('pedidoArticulos', JSON.stringify(articulos));
   }, [articulos]);
 
   const addArticulo = () => {
-    if (descripcion.trim() && cantidad > 0 && precio >= 0) {
-      setArticulos([...articulos, { descripcion, cantidad, precio }]);
+    if (descripcion.trim() && (cantidad !== '' && cantidad > 0) && (precio !== '' && precio > 0)) {
+      setArticulos([...articulos, { descripcion, cantidad: Number(cantidad), precio: Number(precio) }]);
       setDescripcion('');
-      setCantidad(1);
-      setPrecio(1);
+      // setCantidad(1);
+      // setPrecio(1);
     }
   };
 
@@ -60,6 +60,10 @@ const CrearPedidoPage: React.FC = () => {
   const total = articulos.reduce((sum, articulo) => sum + articulo.cantidad * articulo.precio, 0);
 
 const { user } = useAuth();
+
+function formatCurrency(value: number): string {
+ return `${value.toLocaleString('en-US', { style: 'currency', currency: 'DOP' })}`
+}
 
   return (
     
@@ -101,12 +105,33 @@ const { user } = useAuth();
               </label>
               <Input
                 type="text"
-                placeholder="Ej: 2"
+                placeholder="Ej: 15"
                 value={cantidad}
-                onChange={(e) => setCantidad(Number(e.target.value))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+
+                    // 1. If input is empty, allow it (so user can backspace)
+                    if (val === '') {
+                      setCantidad('');
+                      return;
+                    }
+
+                    // 2. Parse the string to an integer
+                    const num = parseInt(val, 10);
+
+                    // 3. Enforce Max 1000 and Min 1 logic
+                    // This also prevents leading zeros because parseInt('05') becomes 5
+                    if (num > 1000) {
+                      setCantidad(1000);
+                    } else if (num < 1) {
+                      setCantidad(1);
+                    } else {
+                      setCantidad(num);
+                    }
+                  }}
                 inputMode="numeric"
                 pattern="[0-9]*"
-                maxLength={3}
+                maxLength={4}
               />
             </div>
             <div className="space-y-2">
@@ -115,9 +140,29 @@ const { user } = useAuth();
               </label>
               <Input
                 type="text"
-                placeholder="Ej: 10.50"
+                placeholder="Ej: 150"
                 value={precio}
-                onChange={(e) => setPrecio(Number(e.target.value))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+
+                    // 1. If input is empty, allow it (so user can backspace)
+                    if (val === '') {
+                      setPrecio('');
+                      return;
+                    }
+
+                    // 2. Parse the string to a float
+                    const num = parseFloat(val);
+
+                    // 3. Enforce Max 9000 and Min 0 logic
+                    if (num > 9000) {
+                      setPrecio(9000);
+                    } else if (num < 1) {
+                      setPrecio(1);
+                    } else {
+                      setPrecio(num);
+                    }
+                  }}
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={4}
@@ -175,7 +220,7 @@ const { user } = useAuth();
         <CardContent className="p-6">
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">Total:</span>
-            <span className="text-2xl font-bold text-primary">${total.toFixed(2)}</span>
+            <span className="text-2xl font-bold text-primary">{formatCurrency(total)}</span>
           </div>
           {/* <div className="flex justify-between items-center">
             <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">Cant. articulos:</span>
