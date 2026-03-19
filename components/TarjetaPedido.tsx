@@ -180,11 +180,11 @@ const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({ pedido, onEstadoUpdated }
           </div>
         </div>
 
-        <div className="mt-8 flex gap-3">
+        <div className="mt-8 flex gap-2">
           <Link
             id="detalles-pedido"
             href={`/detallepedido/${pedido.id}`}
-            className="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-3 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <BookOpen size={16} />
             Detalles
@@ -193,7 +193,7 @@ const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({ pedido, onEstadoUpdated }
             id="accion-pedido"
             onClick={handleAccionPedido}
             disabled={!nextEstado || isUpdating}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-3 rounded-lg transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-1 rounded-lg transition-colors"
           >
             {isUpdating ? 'Actualizando...' : actionLabel}
           </button>

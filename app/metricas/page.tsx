@@ -1,15 +1,12 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
-import { LayoutGrid, Clock3, Truck, ReceiptText, Loader2 } from 'lucide-react'
+import { Clock3, Truck, ReceiptText, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-import { AvatarBadge } from '@/components/ui/AvatarBadge'
 import { Card, CardContent } from '@/components/ui/card'
-import { useAuth } from '@/context/AuthContext'
-import { getImageUrlWithTimestamp } from '@/lib/utils'
 import { getMetricasData } from '@/actions/metricas/get-metricas'
+import { AppShell } from '@/components/layout/AppShell'
 
 type TiempoEntregaMetrica = {
  repartidor: string
@@ -66,7 +63,6 @@ function formatDateTime(value: string): string {
 }
 
 export default function MetricasPage() {
- const { user } = useAuth()
  const [loading, setLoading] = useState(true)
  const [tiemposEntrega, setTiemposEntrega] = useState<TiempoEntregaMetrica[]>([])
  const [pedidosEntregados, setPedidosEntregados] = useState<PedidosEntregadosMetrica[]>([])
@@ -142,23 +138,7 @@ export default function MetricasPage() {
  }, [valorPedidos])
 
  return (
- <div>
- <nav className='px-6 py-4 flex justify-between border-b'>
- <div className='text-xl font-extrabold tracking-tight flex items-center gap-3'>
- <LayoutGrid size={32} />
- Gestor Pedidos
- </div>
-
- {user && (
- <Link href='/profile'>
- <AvatarBadge
- name={user?.name || 'Usuario'}
- avatar_url={getImageUrlWithTimestamp(user?.avatar_url) || undefined}
- />
- </Link>
- )}
- </nav>
-
+ <AppShell>
  <main className='space-y-10 py-8 px-6'>
  {loading ? (
  <Card>
@@ -347,7 +327,6 @@ export default function MetricasPage() {
  </>
  )}
  </main>
- </div>
+ </AppShell>
  )
 }
-
