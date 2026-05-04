@@ -37,7 +37,7 @@ export async function updateSession(request: NextRequest) {
     '/update-password',
     '/crearpedido',
     '/datoscliente',
-    '/metricas',
+    '/metricas'
   ]
 
   // Si no hay usuario autenticado y la ruta es protegida, redirigir al login
