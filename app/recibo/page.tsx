@@ -19,7 +19,9 @@ const Recibo: React.FC<ReciboProps> = ({ pedido = null, onPrintWhatsApp }) => {
     //     ? [repartidor?.nombre, repartidor?.apellido].filter(Boolean).join(' ')
     //     : 'Sin repartidor'
 
-    const repartidor = {}
+
+    // Datos de ejemplo para el repartidor, ya que el pedido no tiene esa información. En una implementación real, esto debería venir del backend.
+    const repartidor = { nombre: 'Repartidor', apellido: 'Gonzalez' }
 
     const reciboRef = useRef<HTMLDivElement>(null);
 
@@ -122,7 +124,9 @@ const Recibo: React.FC<ReciboProps> = ({ pedido = null, onPrintWhatsApp }) => {
                                 <p style={{ margin: 0, color: 'rgb(107, 114, 128)', fontSize: '0.78rem', textTransform: 'uppercase' }}>
                                     Repartidor
                                 </p>
-                                <p style={{ margin: '8px 0 0', fontSize: '1rem' }}>repartidor</p>
+                                <p style={{ margin: '8px 0 0', fontSize: '1rem' }}>
+                                    {repartidor ? `${repartidor.nombre} ${repartidor.apellido}` : 'Sin repartidor'}
+                                </p>
                             </div>
                         </div>
 
@@ -165,7 +169,9 @@ const Recibo: React.FC<ReciboProps> = ({ pedido = null, onPrintWhatsApp }) => {
 
                             {(pedido?.articulo?.length ?? 0) === 0 ? (
                                 <div style={{ padding: '18px 16px', color: 'rgb(75, 85, 99)' }}>
-                                    No hay artículos registrados en este pedido.
+                                    <span>Funda de Pan</span>
+                                    <span>3</span>
+                                    <span>$15.00</span>
                                 </div>
                             ) : (
                                 pedido?.articulo.map((articulo) => (
@@ -179,9 +185,9 @@ const Recibo: React.FC<ReciboProps> = ({ pedido = null, onPrintWhatsApp }) => {
                                             color: 'rgb(51, 65, 85)',
                                         }}
                                     >
-                                        <span>{articulo.descripcion}</span>
+                                        {/* <span>{articulo.descripcion}</span>
                                         <span>{articulo.cantidad}</span>
-                                        <span>{`$${articulo.precio.toFixed(2)}`}</span>
+                                        <span>{`$${articulo.precio.toFixed(2)}`}</span> */}
                                     </div>
                                 ))
                             )}
@@ -206,7 +212,8 @@ const Recibo: React.FC<ReciboProps> = ({ pedido = null, onPrintWhatsApp }) => {
                         <div style={{ textAlign: 'right' }}>
                             <p style={{ margin: 0, color: 'rgb(107, 114, 128)' }}>Total</p>
                             <p style={{ margin: '6px 0 0', fontSize: '1.35rem', fontWeight: 700, color: 'rgb(16, 185, 129)' }}>
-                                ${total.toFixed(2)}
+                                {/* ${total.toFixed(2)} */}
+                                $123.34
                             </p>
                         </div>
                     </div>
